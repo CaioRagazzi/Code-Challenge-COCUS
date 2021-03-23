@@ -38,7 +38,7 @@ export class GithubController {
   })
   public async GetUserRepositoriesNotForked(
     @Param('userName') userName: string,
-    @Query('totalRepositories') totalRepositories = 5,
+    @Query('totalRepositories') totalRepositories = 10,
   ): Promise<UserRepositoriesResponseDTO[]> {
     try {
       const userRepositories = await this.githubIntegrationService.getUserRepositoriesNotForked(
