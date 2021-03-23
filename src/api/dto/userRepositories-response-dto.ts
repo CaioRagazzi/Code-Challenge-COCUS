@@ -1,5 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class Branch {
+  @ApiProperty({
+    type: String,
+    description: 'Branche name',
+  })
+  name: string;
+  @ApiProperty({
+    type: String,
+    description: 'Last commit SHA ID',
+  })
+  lastCommitSHA: string;
+}
+
 export class UserRepositoriesResponseDTO {
   @ApiProperty({
     type: String,
@@ -12,21 +25,8 @@ export class UserRepositoriesResponseDTO {
   })
   ownerUserName: string;
   @ApiProperty({
-    type: Array,
-    description: 'Branches not forked',
+    type: [Branch],
+    description: 'Branches',
   })
   branches: Branch[];
-}
-
-export class Branch {
-  @ApiProperty({
-    type: String,
-    description: 'Branches name',
-  })
-  name: string;
-  @ApiProperty({
-    type: String,
-    description: 'Last commit SHA ID',
-  })
-  lastCommitSHA: string;
 }
