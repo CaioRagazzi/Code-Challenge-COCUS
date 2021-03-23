@@ -9,7 +9,7 @@ describe('GitHubController', () => {
     return request(app)
       .get('/github/caioragazzi')
       .set('accept', 'application/json')
-      .query('totalRepositories=1')
+      .query('limitSearch=1')
       .expect(HttpStatus.OK);
   });
 
@@ -18,7 +18,7 @@ describe('GitHubController', () => {
     return request(app)
       .get('/github/caioragazzi')
       .set('accept', 'application/xml')
-      .query('totalRepositories=1')
+      .query('limitSearch=1')
       .expect(HttpStatus.NOT_ACCEPTABLE);
   });
 
@@ -27,7 +27,7 @@ describe('GitHubController', () => {
     return request(app)
       .get('/github/caioragazziiiiiii')
       .set('accept', 'application/json')
-      .query('totalRepositories=1')
+      .query('limitSearch=1')
       .expect(HttpStatus.NOT_FOUND);
   });
 
@@ -36,7 +36,7 @@ describe('GitHubController', () => {
     return request(app)
       .get('/github/caioragazzi')
       .set('accept', 'application/json')
-      .query('totalRepositories=1')
+      .query('limitSearch=1')
       .expect(({ body }) => {
         expect(body).toHaveLength(1);
       });
