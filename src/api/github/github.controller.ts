@@ -32,18 +32,18 @@ export class GithubController {
     type: UserRepositoriesResponseDTO,
   })
   @ApiQuery({
-    name: 'totalRepositories',
+    name: 'limitSearch',
     required: false,
     schema: { default: 10 },
   })
   public async GetUserRepositoriesNotForked(
     @Param('userName') userName: string,
-    @Query('totalRepositories') totalRepositories = 10,
+    @Query('limitSearch') limitSearch = 10,
   ): Promise<UserRepositoriesResponseDTO[]> {
     try {
       const userRepositories = await this.githubIntegrationService.getUserRepositoriesNotForked(
         userName,
-        totalRepositories,
+        limitSearch,
       );
       return userRepositories;
     } catch (error) {
