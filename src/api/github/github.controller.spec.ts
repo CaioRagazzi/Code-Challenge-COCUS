@@ -1,18 +1,18 @@
 import { HttpModule } from '@nestjs/common';
 import { GithubBranchService } from '../../infrastructure/github/github-branch.service';
-import { GithubCommitService } from '../../infrastructure/github/github-commit.service';
 import { GithubRepositoryService } from '../../infrastructure/github/github-repository.service';
 import { GithubIntegrationService } from '../../infrastructure/github/githubIntegration.service';
 import { UserRepositoriesResponseDTO } from '../dto/userRepositories-response-dto';
 import { GithubController } from './github.controller';
 import { Test } from '@nestjs/testing';
+import { AuthService } from '../../infrastructure/auth/auth.service';
 
 describe('GitHubController', () => {
   let githubController: GithubController;
   let githubIntegrationService: GithubIntegrationService;
   let githubRepository: GithubRepositoryService;
   let githubBranch: GithubBranchService;
-  let githubCommit: GithubCommitService;
+  let authService: AuthService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -20,21 +20,22 @@ describe('GitHubController', () => {
       providers: [
         GithubBranchService,
         GithubRepositoryService,
-        GithubCommitService,
         GithubIntegrationService,
+        AuthService,
       ],
     }).compile();
     githubRepository = module.get<GithubRepositoryService>(
       GithubRepositoryService,
     );
     githubBranch = module.get<GithubBranchService>(GithubBranchService);
-    githubCommit = module.get<GithubCommitService>(GithubCommitService);
 
     githubIntegrationService = new GithubIntegrationService(
       githubRepository,
       githubBranch,
-      githubCommit,
     );
+
+    authService = module.get<AuthService>(AuthService);
+
     githubController = new GithubController(githubIntegrationService);
   });
 
@@ -65,9 +66,10 @@ describe('GitHubController', () => {
         .spyOn(githubIntegrationService, 'getUserRepositoriesNotForked')
         .mockImplementation(async () => result);
 
-      expect(
-        await githubController.GetUserRepositoriesNotForked('caio', ''),
-      ).toBe(result);
+      githubController.GetUserRepositoriesNotForked('caio', 1).then(res => {
+        expect(res).toBe(result);
+        expect(res).toHaveLength(1);
+      });
     });
   });
 });

@@ -10,6 +10,7 @@ async function bootstrap(): Promise<void> {
     .setTitle('Code Challenge COCUS')
     .setDescription('Api code challenge COCUS')
     .setVersion('1.0')
+    .addBasicAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

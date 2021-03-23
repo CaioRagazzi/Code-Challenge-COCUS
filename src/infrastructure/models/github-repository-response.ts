@@ -1,6 +1,6 @@
-import { GithubUser } from './github-user.interface';
+import { GithubUser } from './github-user';
 
-export interface GithubRepositoryResponse {
+export class GithubRepositoryResponse {
   id: number;
   node_id: string;
   name: string;

@@ -1,10 +1,10 @@
-export interface GithubBranchResponse {
+export class GithubBranchResponse {
   name: string;
   commit: Commit;
   protected: boolean;
 }
 
-interface Commit {
+class Commit {
   sha: string;
   url: string;
 }

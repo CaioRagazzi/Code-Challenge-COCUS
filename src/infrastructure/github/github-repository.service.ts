@@ -1,52 +1,43 @@
-import {
-  HttpService,
-  HttpStatus,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
-import { GithubRepositoryResponse } from '../interfaces/github-repository-response.interface';
+import { HttpService, Injectable } from '@nestjs/common';
+import { AuthService } from '../auth/auth.service';
+import { GithubRepositoryResponse } from '../models/github-repository-response';
 
 @Injectable()
 export class GithubRepositoryService {
-  constructor(private httpService: HttpService) {}
+  constructor(
+    private httpService: HttpService,
+    private authService: AuthService,
+  ) {}
 
   public async findNotForkedByUserName(
     userName: string,
     perPage: number,
   ): Promise<GithubRepositoryResponse[]> {
-    try {
-      const gitHubRepositories = await this.httpService
-        .get<GithubRepositoryResponse[]>(
-          `https://api.github.com/users/${userName}/repos`,
-          {
-            params: {
-              per_page: perPage,
-            },
-            headers: {
-              accept: 'application/vnd.github.v3+json',
-            },
+    const gitHubRepositories = await this.httpService
+      .get<GithubRepositoryResponse[]>(
+        `https://api.github.com/users/${userName}/repos`,
+        {
+          params: {
+            per_page: perPage,
+            sort: 'pushed',
+            direction: 'desc',
           },
-        )
-        .toPromise();
-      const response: GithubRepositoryResponse[] = [];
-      for (const repository of gitHubRepositories.data) {
-        if (!repository.fork) {
-          response.push(repository);
-        }
+          headers: {
+            accept: 'application/vnd.github.v3+json',
+          },
+          auth: {
+            username: this.authService.getLogin(),
+            password: this.authService.getPassword(),
+          },
+        },
+      )
+      .toPromise();
+    const response: GithubRepositoryResponse[] = [];
+    for (const repository of gitHubRepositories.data) {
+      if (!repository.fork) {
+        response.push(repository);
       }
-      return response;
-    } catch (error) {
-      if (error.response?.status == 404) {
-        throw new NotFoundException({
-          status: HttpStatus.NOT_FOUND,
-          message: 'User Not Found',
-        });
-      }
-      throw new InternalServerErrorException({
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Internal Server Error',
-      });
     }
+    return response;
   }
 }

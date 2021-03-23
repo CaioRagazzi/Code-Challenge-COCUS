@@ -2,22 +2,23 @@ import { HttpModule, HttpService } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AxiosResponse } from 'axios';
 import { of } from 'rxjs';
-import { GithubBranchResponse } from '../interfaces/github-branch-response.interface';
-import { GithubRepositoryResponse } from '../interfaces/github-repository-response.interface';
+import { GithubBranchResponse } from '../models/github-branch-response';
+import { GithubRepositoryResponse } from '../models/github-repository-response';
 import { GithubBranchService } from './github-branch.service';
-import { GithubCommitService } from './github-commit.service';
 import { GithubRepositoryService } from './github-repository.service';
 import { GithubIntegrationService } from './githubIntegration.service';
-import { resultGithubRepositoryResponse } from '../../../test/githubRepositoryResult';
-import { GithubCommitResponse } from '../interfaces/github-commit-response.interface';
-import { resultGithubCommitResponse } from '../../../test/githubCommitResult';
+import {
+  resultGithubRepositoryResponse,
+  resultGithubRepositoryResponseForked,
+} from '../../../test/githubRepositoryResult';
 import { UserRepositoriesResponseDTO } from '../../api/dto/userRepositories-response-dto';
+import { AuthService } from '../auth/auth.service';
 
 describe('GitHubService', () => {
   let githubIntegrationService: GithubIntegrationService;
   let githubRepository: GithubRepositoryService;
   let githubBranch: GithubBranchService;
-  let githubCommit: GithubCommitService;
+  let authService: AuthService;
   let httpService: HttpService;
 
   beforeEach(async () => {
@@ -26,21 +27,22 @@ describe('GitHubService', () => {
       providers: [
         GithubBranchService,
         GithubRepositoryService,
-        GithubCommitService,
         GithubIntegrationService,
+        AuthService,
       ],
     }).compile();
     githubRepository = module.get<GithubRepositoryService>(
       GithubRepositoryService,
     );
     githubBranch = module.get<GithubBranchService>(GithubBranchService);
-    githubCommit = module.get<GithubCommitService>(GithubCommitService);
 
     githubIntegrationService = new GithubIntegrationService(
       githubRepository,
       githubBranch,
-      githubCommit,
     );
+
+    authService = module.get<AuthService>(AuthService);
+
     httpService = module.get<HttpService>(HttpService);
   });
 
@@ -93,14 +95,13 @@ describe('GitHubService', () => {
         done();
       });
     });
-  });
 
-  describe('getcommit', () => {
-    it('should return last commit by user name, repository and shaid', done => {
-      const result: GithubCommitResponse = resultGithubCommitResponse;
+    it('should return an array of repositories and exclude forks', done => {
+      const resultForked: GithubRepositoryResponse[] = resultGithubRepositoryResponseForked;
+      const result: GithubRepositoryResponse[] = resultGithubRepositoryResponse;
 
-      const response: AxiosResponse<GithubCommitResponse> = {
-        data: result,
+      const response: AxiosResponse<GithubRepositoryResponse[]> = {
+        data: resultForked,
         headers: {},
         config: { url: 'http://localhost:3000/mockUrl' },
         status: 200,
@@ -109,49 +110,17 @@ describe('GitHubService', () => {
 
       jest.spyOn(httpService, 'get').mockImplementationOnce(() => of(response));
 
-      githubCommit
-        .getLastCommitByUserNameAndRepositoryNameAndShaId(
-          'caioragazzi',
-          'repositoryName',
-          'SHA',
-        )
-        .then(res => {
-          expect(res).toEqual(result);
-          done();
-        });
-    });
-  });
-
-  describe('getcommit', () => {
-    it('should return last commit by user name and repository', done => {
-      const result: GithubCommitResponse = resultGithubCommitResponse;
-
-      const response: AxiosResponse<GithubCommitResponse> = {
-        data: result,
-        headers: {},
-        config: { url: 'http://localhost:3000/mockUrl' },
-        status: 200,
-        statusText: 'OK',
-      };
-
-      jest.spyOn(httpService, 'get').mockImplementationOnce(() => of(response));
-
-      githubCommit
-        .getLastCommitByUserNameAndRepositoryName(
-          'caioragazzi',
-          'repositoryName',
-        )
-        .then(res => {
-          expect(res).toEqual(result);
-          done();
-        });
+      githubRepository.findNotForkedByUserName('caioragazzi', 10).then(res => {
+        expect(res).toHaveLength(1);
+        expect(res).toEqual(result);
+        done();
+      });
     });
   });
 
   describe('getRepositoriesDTO', () => {
     it('should return an array user repositories dto', async () => {
       const resultRepo: GithubRepositoryResponse[] = resultGithubRepositoryResponse;
-      const resultCommit: GithubCommitResponse = resultGithubCommitResponse;
       const resultBranches: GithubBranchResponse[] = [
         {
           name: 'caio',
@@ -182,10 +151,6 @@ describe('GitHubService', () => {
       jest
         .spyOn(githubBranch, 'getBranches')
         .mockImplementation(async () => resultBranches);
-
-      jest
-        .spyOn(githubCommit, 'getLastCommitByUserNameAndRepositoryNameAndShaId')
-        .mockImplementation(async () => resultCommit);
 
       expect(
         await githubIntegrationService.getUserRepositoriesNotForked(

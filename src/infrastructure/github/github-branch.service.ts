@@ -1,9 +1,13 @@
-import { HttpService, Injectable, Scope } from '@nestjs/common';
-import { GithubBranchResponse } from '../interfaces/github-branch-response.interface';
+import { HttpService, Injectable } from '@nestjs/common';
+import { AuthService } from '../auth/auth.service';
+import { GithubBranchResponse } from '../models/github-branch-response';
 
 @Injectable()
 export class GithubBranchService {
-  constructor(private httpService: HttpService) {}
+  constructor(
+    private httpService: HttpService,
+    private authService: AuthService,
+  ) {}
   async getBranches(
     userName: string,
     repositoryName: string,
@@ -14,6 +18,10 @@ export class GithubBranchService {
         {
           headers: {
             accept: 'application/vnd.github.v3+json',
+          },
+          auth: {
+            username: this.authService.getLogin(),
+            password: this.authService.getPassword(),
           },
         },
       )

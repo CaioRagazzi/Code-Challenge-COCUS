@@ -3,10 +3,9 @@ import {
   UserRepositoriesResponseDTO,
   Branch,
 } from '../../api/dto/userRepositories-response-dto';
-import { GithubBranchResponse } from '../interfaces/github-branch-response.interface';
-import { GithubRepositoryResponse } from '../interfaces/github-repository-response.interface';
+import { GithubBranchResponse } from '../models/github-branch-response';
+import { GithubRepositoryResponse } from '../models/github-repository-response';
 import { GithubBranchService } from './github-branch.service';
-import { GithubCommitService } from './github-commit.service';
 import { GithubRepositoryService } from './github-repository.service';
 
 @Injectable()
@@ -14,7 +13,6 @@ export class GithubIntegrationService {
   constructor(
     private githubRepository: GithubRepositoryService,
     private githubBranch: GithubBranchService,
-    private githubCommit: GithubCommitService,
   ) {}
 
   async getUserRepositoriesNotForked(

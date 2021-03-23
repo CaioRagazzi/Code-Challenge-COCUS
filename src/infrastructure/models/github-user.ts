@@ -1,4 +1,4 @@
-export interface GithubUser {
+export class GithubUser {
   login: string;
   id: number;
   node_id: string;
